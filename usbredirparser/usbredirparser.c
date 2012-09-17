@@ -69,6 +69,7 @@ struct usbredirparser_priv {
     int data_read;
     int to_skip;
     struct usbredirparser_buf *write_buf;
+    int write_buf_count;
 };
 
 static void va_log(struct usbredirparser_priv *parser, int verbose,
@@ -792,7 +793,7 @@ int usbredirparser_has_data_to_write(struct usbredirparser *parser_pub)
 {
     struct usbredirparser_priv *parser =
         (struct usbredirparser_priv *)parser_pub;
-    return parser->write_buf != NULL;
+    return parser->write_buf_count;
 }
 
 int usbredirparser_do_write(struct usbredirparser *parser_pub)
@@ -827,6 +828,7 @@ int usbredirparser_do_write(struct usbredirparser *parser_pub)
             if (!(parser->flags & usbredirparser_fl_write_cb_owns_buffer))
                 free(wbuf->buf);
             free(wbuf);
+            parser->write_buf_count--;
         }
     }
     UNLOCK(parser);
@@ -893,13 +895,14 @@ static void usbredirparser_queue(struct usbredirparser *parser_pub,
     if (!parser->write_buf) {
         parser->write_buf = new_wbuf;
     } else {
-        /* maybe we should limit the write_buf stack depth ? */
+        /* limiting the write_buf's stack depth is our users responsibility */
         wbuf = parser->write_buf;
         while (wbuf->next)
             wbuf = wbuf->next;
 
         wbuf->next = new_wbuf;
     }
+    parser->write_buf_count++;
     UNLOCK(parser);
 }
 
