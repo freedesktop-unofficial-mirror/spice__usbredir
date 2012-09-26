@@ -7,6 +7,9 @@ usbredir-0.4.4 26 September 2012
  -Remove bulk packets time out, this fixes various devices not working
  -usbredirhost_has_data_to_write now returns the write queue depth, instead
   of only 0 or 1
+ -when the write queue gets too large, drop isochronous input packets
+-usbredirserver:
+ -Fix a crash on client disconnect
 
 usbredir-0.4.3 2 April 2012
 ---------------------------
